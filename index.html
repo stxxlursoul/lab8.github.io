@@ -1,31 +1,74 @@
 <!DOCTYPE html>
-<html lang = "en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel = "stylesheet" href = "style.css" />
-        <title>Gallery</title>
-    </head>
-    <body>
-        <div class="slider-wrapper">
-            <div class="slider-container">
-                <button class="slider-btn" id="prevBtn">Назад</button>
-                <div class="slider-viewport">
-                    <div class="slider-track" id="sliderTrack">
-                        <img class = "slider-img" src ="images/1.jpg" alt="1" />
-                        <img class = "slider-img" src ="images/2.jpg" alt="2" />
-                        <img class = "slider-img" src ="images/3.jpg" alt="3" />
-                        <img class = "slider-img" src ="images/4.jpg" alt="4" />
-                        <img class = "slider-img" src ="images/5.jpg" alt="5" />
-                        <img class = "slider-img" src ="images/6.jpg" alt="6" />
-                        <img class = "slider-img" src ="images/7.jpg" alt="7" />
-                        <img class = "slider-img" src ="images/8.jpg" alt="8" />
-                    </div>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма обратной связи</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <button class="open-btn" id="openFormBtn">Связаться с нами</button>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="close-btn" id="closeFormBtn" aria-label="Закрыть">&times;</button>
+            <h2>Обратная связь</h2>
+            
+            <form id="feedbackForm" novalidate>
+                <div class="form-group">
+                    <label for="name">ФИО *</label>
+                    <input type="text" id="name" name="name" required 
+                        pattern="[А-Яа-яЁёA-Za-z\s\-]+" 
+                        minlength="2" maxlength="100"
+                        title="Только буквы, пробелы и дефисы (2–100 символов)"
+                        placeholder="Иванов Иван Иванович">
                 </div>
-                <button class="slider-btn" id="nextBtn">Вперёд</button>
-            </div>
-            <div class="slider-pager" id="galleryPager"></div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required 
+                        maxlength="100"
+                        title="Введите корректный email, например user@mail.ru"
+                        placeholder="example@mail.ru">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон *</label>
+                    <input type="tel" id="phone" name="phone" required 
+                        pattern="\+?[0-9\s\-\(\)]{10,20}" 
+                        minlength="10" maxlength="20"
+                        inputmode="tel"
+                        title="10–20 цифр, допускаются +, -, пробелы и скобки"
+                        placeholder="+7 (999) 123-45-67">
+                </div>
+
+                <div class="form-group">
+                    <label for="organization">Организация</label>
+                    <input type="text" id="organization" name="organization" 
+                        maxlength="150"
+                        placeholder="Название компании">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Сообщение *</label>
+                    <textarea id="message" name="message" required 
+                            minlength="5" maxlength="1000"
+                            title="Сообщение от 5 до 1000 символов"
+                            placeholder="Ваше сообщение..."></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreement" name="agreement" required>
+                    <label for="agreement">Я согласен на обработку персональных данных</label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Отправить</button>
+                <div class="message" id="formMessage"></div>
+            </form>
         </div>
-        <script src="script.js"></script>
-    </body>
-</html> 
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

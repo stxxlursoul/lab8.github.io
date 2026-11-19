@@ -1,71 +1,163 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const track = document.getElementById("sliderTrack");
-    const slides = document.querySelectorAll(".slider-img");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const pager = document.getElementById("galleryPager")
-
-    const totalSlides = slides.length;
-    let currentIndex = 0;
-    let slidesToShow = 3;
-    let totalPages = totalSlides - slidesToShow + 1;
-
-    const getSlidesToShow = () => window.innerWidth <= 768 ? 1 : 3;
-
-    const updateSlider = () => {
-        const slideWidth = slides[0].getBoundingClientRect().width;
-        track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
-        updatePager();
+document.addEventListener('DOMContentLoaded', () => {
+    const FORM_ENDPOINT = 'https://formcarry.com/s/FJ_8HEpSg3U'; 
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    const openBtn = document.getElementById('openFormBtn');
+    const closeBtn = document.getElementById('closeFormBtn');
+    const form = document.getElementById('feedbackForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const formMessage = document.getElementById('formMessage');
+    
+    const fields = {
+        name: document.getElementById('name'),
+        email: document.getElementById('email'),
+        phone: document.getElementById('phone'),
+        organization: document.getElementById('organization'),
+        message: document.getElementById('message'),
+        agreement: document.getElementById('agreement')
     };
 
-    const updatePager = () => {
-        pager.innerHTML = '';
+    openBtn.addEventListener('click', () => {
+        history.pushState({ modalOpen: true }, '', '#feedback-form');
+        showModal();
+    });
 
-        for (let i=0; i< totalPages; i++){
-            const dot = document.createElement("button");
-            dot.classList.add("pager-dot");
+    closeBtn.addEventListener('click', () => {
+        history.back();
+    });
 
-            if (i === currentIndex){
-                dot.classList.add("active");
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            history.back();
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        if (modalOverlay.classList.contains('active')) {
+            hideModal();
+        }
+        if (window.location.hash === '#feedback-form' && !modalOverlay.classList.contains('active')) {
+            showModal();
+        }
+    });
+
+    if (window.location.hash === '#feedback-form') {
+        showModal();
+    }
+
+    function showModal() {
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        restoreFormData();
+    }
+
+    function hideModal() {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        clearMessage();
+    }
+
+    const STORAGE_KEY = 'feedback_form_data';
+
+    function saveFormData() {
+        const data = {
+            name: fields.name.value,
+            email: fields.email.value,
+            phone: fields.phone.value,
+            organization: fields.organization.value,
+            message: fields.message.value,
+            agreement: fields.agreement.checked
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function restoreFormData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                fields.name.value = data.name || '';
+                fields.email.value = data.email || '';
+                fields.phone.value = data.phone || '';
+                fields.organization.value = data.organization || '';
+                fields.message.value = data.message || '';
+                fields.agreement.checked = data.agreement || false;
+            } catch (e) {
+                console.error('Ошибка восстановления данных', e);
             }
+        }
+    }
 
-            dot.addEventListener("click", () => {
-                currentIndex = i;
-                updateSlider();
+    function clearFormData() {
+        localStorage.removeItem(STORAGE_KEY);
+    }
+
+    Object.values(fields).forEach(field => {
+        field.addEventListener('input', saveFormData);
+        field.addEventListener('change', saveFormData);
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMessage();
+
+        if (!form.checkValidity()) {
+            const invalidField = form.querySelector(':invalid');
+            if (invalidField) {
+                invalidField.reportValidity();
+                if (invalidField === fields.agreement) {
+                    showMessage('Необходимо согласие на обработку персональных данных.', 'error');
+                } else {
+                    showMessage('Проверьте правильность заполнения полей.', 'error');
+                }
+                invalidField.focus();
+            }
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Отправка...';
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(FORM_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                body: formData
             });
-            pager.appendChild(dot);
-        }
-    };
 
-    nextBtn.addEventListener("click", () => {
-        if (currentIndex < totalPages - 1){
-            currentIndex++;
-        } else{
-            currentIndex = 0;
-        }
-        updateSlider();
-    });
-
-    prevBtn.addEventListener("click", () => {
-        if (currentIndex > 0){
-            currentIndex--;
-        } else{
-            currentIndex = totalPages - 1;
-        }
-        updateSlider();
-    });
-
-    window.addEventListener("resize", () => {
-        const newSlidesToShow = getSlidesToShow();
-
-        if (newSlidesToShow !== slidesToShow) {
-            slidesToShow = newSlidesToShow;
-            if (currentIndex >= totalSlides - slidesToShow + 1){
-                currentIndex = 0;
+            if (response.ok) {
+                showMessage('Сообщение успешно отправлено!', 'success');
+                form.reset();
+                clearFormData();
+                
+                setTimeout(() => {
+                    if (modalOverlay.classList.contains('active')) {
+                        history.back();
+                    }
+                }, 2000);
+            } else {
+                throw new Error('Ошибка сервера');
             }
+        } catch (error) {
+            showMessage('Произошла ошибка при отправке. Попробуйте позже.', 'error');
+            console.error(error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Отправить';
         }
-        updateSlider();
     });
-    slidesToShow = getSlidesToShow();
-    updateSlider();
-})
+
+    function showMessage(text, type) {
+        formMessage.textContent = text;
+        formMessage.className = `message ${type}`;
+    }
+
+    function clearMessage() {
+        formMessage.textContent = '';
+        formMessage.className = 'message';
+    }
+});
